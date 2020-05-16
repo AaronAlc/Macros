@@ -1290,6 +1290,7 @@ Sub assist_Setup
   /if (${FindItemCount[=Staff of Phenomenal Power]})             /varset EpicName Staff of Phenomenal Power
   /if (${FindItemCount[=Soulwhisper]})                           /varset EpicName Soulwhisper
   /if (${FindItemCount[=Deathwhisper]})                          /varset EpicName Deathwhisper
+  /if (${FindItemCount[=Kreljnok's Sword of Eternal Power]})                          /varset EpicName Kreljnok's Sword of Eternal Power
   /if (${EpicName.Length})     /call BuildArray EPICBurns "${EpicName}"
 
   /declare AnguishChest string outer

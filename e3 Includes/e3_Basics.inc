@@ -1485,6 +1485,160 @@ SUB EVENT_reportMana(line,ChatSender)
 }
 /RETURN
 
+#EVENT doRaidInvites "<#1#> Do Raid Invites#*#"
+SUB EVENT_doRaidInvites(line, raidLeader)
+   |have to be in zone and a bot
+   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) { /return
+      |have to be a group leader
+      /if (!${Me.AmIGroupLeader}) /return
+         /if (${Me.CleanName.Equal[${raidLeader}]}) /return
+            /bct ${raidLeader} //raidinvite ${Me.CleanName}
+            /delay 5s
+
+}
+/RETURN
+
+#EVENT acceptTrade "<#1#> Accept Trade #2#"
+SUB Event_acceptTrade(line, ChatSender, eventParams)
+  /if (!${checkEventArgs[${ChatSender},${line},UZR,${eventParams}]}) /return
+      |only the person the who is targeted will do this
+      /if (!${c_eventArgData.Equal[${Me.CleanName}]}) /return
+         /notify TradeWnd TRDW_Trade_Button leftmouseup
+/RETURN
+
+
+#EVENT reportPlat "<#1#> Report Plat#*#"
+SUB EVENT_reportPlat(line, ChatSender)
+   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
+   /if (${Me.Platinum} < 50) /return
+   /docommand ${ChatToggle} Plat: ${Me.Platinum} Plat in bank ${Me.PlatinumBank}
+/RETURN
+
+#EVENT givePlat "<#1#> Give Plat #2#"
+#EVENT givePlat "#1# tells you, 'Give Plat #2#'"
+SUB Event_givePlat(line, ChatSender, eventParams)
+  /if (!${checkEventArgs[${ChatSender},${line},UZR,${eventParams}]}) /return
+      |only the person the who is targeted will do this
+      /if (!${c_eventArgData.Equal[${Me}]}) /return
+         /cleanup 
+         /windowstate InventoryWindow Open
+         /if (${Me.Platinum}) {
+            /shiftkey /notify InventoryWindow IW_Money0 leftmouseup
+            /target ${ChatSender}
+            /squelch /stick
+            /delay 2s
+            /click leftclick target
+            /delay 2s
+            /shiftkey /notify InventoryWindow IW_Money1 leftmouseup
+            /click leftclick target
+            /delay 2s
+            /shiftkey /notify InventoryWindow IW_Money2 leftmouseup
+            /click leftclick target
+            /delay 2s
+            /shiftkey /notify InventoryWindow IW_Money3 leftmouseup
+            /click leftclick target
+            /squelch /stick off
+            /delay 2s
+            /notify TradeWnd TRDW_Trade_Button leftmouseup
+         } else {
+            /docommand ${ChatToggle} No Money
+         }
+/RETURN
+
+#EVENT reportAA "<#1#> Report AA"
+#EVENT reportAA "<#1#> Report AA #2#"
+SUB EVENT_reportAA(line, ChatSender, aaFloor)
+   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
+   /if (${Defined[aaFloor]} && (${Me.AAPoints} > ${aaFloor})) {
+      /docommand ${ChatToggle} Total AA: ${Me.AAPointsTotal} Unused AA: ${Me.AAPoints} 
+   } else {
+      /if (${Me.AAPoints} > 15) { 
+         /docommand ${ChatToggle} Total AA: ${Me.AAPointsTotal} Unused AA: ${Me.AAPoints} 
+      }
+   }
+/RETURN
+
+#EVENT statusReport "<#1#> Status Report#*#"
+SUB EVENT_statusReport(line, ChatSender, eventParams)
+   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
+      /docommand ${ChatToggle} Level: ${Me.Level} ExpPct: ${Me.PctExp}% Total AA: ${Me.AAPointsTotal} Unused AA: ${Me.AAPoints} AAPct: ${Me.PctAAExp}%
+/RETURN
+   
+
+#EVENT checkLesson "<#1#> Check Lesson Status#*#"
+SUB EVENT_checkLesson(line, ChatSender)
+   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
+   /if (${Me.AltAbilityReady[481]}) {
+      /docommand ${ChatToggle} Lesson Available
+   }
+   /if (!${Me.AltAbilityReady[481]}) {
+      /docommand ${ChatToggle} Lesson Down Time Left: ${Math.Calc[${Me.AltAbilityTimer[481]} / (60*60*1000)]} hours
+   }
+/RETURN
+
+#EVENT lootItem "<#1#> Loot Item #2# #3# #4# #5#"
+#EVENT lootItem "<#1#> Loot Item #2# #3# #4#"
+|pass charname corpseID and itemID and it will move to a corpse to loot the item you gave it
+SUB EVENT_lootItem(line, ChatSender, corpseID, charName, itemName, equipSlot)
+   |only the person whose name we passed will do this
+   /declare full_item_name local
+   /if (!${Me.CleanName.Equal[${charName}]}) /RETURN
+      |check the distance
+   /if (!${Bool[${Spawn[corpseID].Distance.Int} < 100]}) { /RETURN
+      |move to the corpse
+      /target ID ${corpseID}
+      /delay 7
+      /squelch /stick 10
+      /delay 5s
+      /squelch /stick off
+      /click rightclick target
+      /delay 1s
+      |check if window open
+      /if (${Corpse.Open}) {
+         /if (${Me.FreeInventory}) {
+            |Gets the full item name
+            /varset full_item_name ${Corpse.Item[${itemName}]}
+            /if (${Corpse.Item[${itemName}].Lore} && ${FindItemCount[${Corpse.Item[${itemName}]}]}) {
+               /docommand ${ChatToggle} Item is Lore ${Corpse.Item[${itemName}]}
+               /delay 15
+               /notify LootWnd LW_DoneButton leftmouseup
+               /return
+            } else {
+               /itemnotify ${Corpse.Item[${full_item_name}].InvSlot} leftmouseup
+               /delay 5
+               |used for debug
+               /if (${Corpse.Item[${itemName}].NoDrop}) {
+                  /notify ConfirmationDialogBox CD_Yes_Button leftmouseup
+                  /delay 15
+               }
+               /docommand ${ChatToggle} Looting ${full_item_name}
+               /notify LootWnd LW_DoneButton leftmouseup
+               /autoinventory
+               /delay 2s
+               /autoinventory
+               /if (${Select[${equipSlot},charm,leftear,head,face,rightear,neck,shoulder,arms,back,leftwrist,rightwrist,ranged,hands,mainhand,offhand,leftfinger,rightfinger,chest,legs,feet,waist,powersource,ammo]}) {
+                  /delay 2s
+                  /call SwapItem "${full_item_name}" ${equipSlot}
+                  /docommand ${ChatToggle} Equiping ${full_item_name} to ${equipSlot}
+               } else {
+                  /delay 3
+                  /autoinventory
+                  /RETURN
+               }
+            }
+         }
+
+      } else {
+         /docommand ${ChatToggle} Corpse is not open will not loot
+      }
+     
+   } else {
+      /docommand ${ChatToggle} Corpse is too far get closer
+   }
+   
+/RETURN
+
+
 |---------------------------|
 #EVENT campDesktop "<#1#> CampDesktop"
 SUB campDesktop(line,ChatSender)
@@ -1584,6 +1738,14 @@ Sub basics_Background_Events
   /doevents macroHelp
   /doevents exp_group
   /doevents campdesktop
+  /doevents reportPlat
+  /doevents checkLesson
+  /doevents givePlat
+  /doevents acceptTrade
+  /doevents lootItem
+  /doevents reportAA
+  /doevents statusReport
+  /doevents doRaidInvites
 |		/varset event_counter 1
 |	} else {
 |		/varcalc event_counter ${event_counter}+1

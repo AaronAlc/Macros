@@ -135,6 +135,8 @@ SUB Bind_CastingRadiantCure(whoCasting, toggle)
 |--------------------------------------------|
 |- Listen for /bc Radiant Cure				      -|
 #event RadiantCure "<#1#> Radiant Cure"
+#event RadiantCure "#1# tells you, 'Radiant Cure'"
+#event RadiantCure "#1# tells you, 'rc'"
 sub event_RadiantCure(string line, string ChatSender)
   /if (${Bool[${Me.AltAbilityReady[Radiant Cure]}]}) /call cast_RadiantCure
 /return
