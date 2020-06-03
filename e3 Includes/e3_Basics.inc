@@ -1488,14 +1488,21 @@ SUB EVENT_reportMana(line,ChatSender)
 #EVENT doRaidInvites "<#1#> Do Raid Invites#*#"
 SUB EVENT_doRaidInvites(line, raidLeader)
    |have to be in zone and a bot
-   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) { /return
-      |have to be a group leader
-      /if (!${Me.AmIGroupLeader}) /return
-         /if (${Me.CleanName.Equal[${raidLeader}]}) /return
-            /bct ${raidLeader} //raidinvite ${Me.CleanName}
-            /delay 5s
+   /declare i int local
+   /declare charName string local 
+   /if (!${Me.CleanName.Equal[${raidLeader}]}) /return
+      /for i 0 to ${NetBots.Counts}
+         /varset charName ${NetBots.Client[${i}]}
+         /if (${NetBots[${charName}].Leader.Equal[${charName}]}) {
+            /if (!${charName.Equal[${raidLeader}]}) {
+               /if (${NetBots[${charName}].InZone}) {
+                  /bc Raid inviting ${charName}
+                  /raidinvite ${charName}
 
-}
+               }
+            }
+         }
+      /next i
 /RETURN
 
 #EVENT acceptTrade "<#1#> Accept Trade #2#"
